@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Time    : 2023/4/18 17:15
 # @Author  : Ahuiforever
@@ -118,7 +118,7 @@ class Calibrator:
         return self._tvecs
 
 
-# ! ======================================================================================================OLD FUNCTION S
+# ` ======================================================================================================OLD FUNCTION S
 #     def normalization(self, _image_a: np.ndarray, _image_b: np.ndarray):
 #         _k1 = self._mtx
 #         _k1_inv = np.linalg.inv(_k1)
@@ -141,7 +141,7 @@ class Calibrator:
 #         # _dst = np.zeros(np.max(_puv2, axis=0)[::-1][1:] + 1)
 #         _new_image = cv2.remap(src=_image_a, map1=_puv2[:, :2], map2=None, interpolation=cv2.INTER_LINEAR)
 #         cv2.imwrite('result.jpg', _new_image)
-# ! ======================================================================================================OLD FUNCTION E
+# ` ======================================================================================================OLD FUNCTION E
 
 # / todo: 1. modify self.compute() to calculate two groups of parameters, got k and k_new and so on.
 # / todo: 2. modify self.normalization() to realize image calibration according to parameter pairs like (k -> k_new).
