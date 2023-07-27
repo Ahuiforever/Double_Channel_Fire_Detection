@@ -8,23 +8,31 @@
 
 1. **首先，完成相机内参（Intrinsics）“归一化”。**
 
-* 应当明确，*归一化*并非是某种通用说法，只在本文中使用。
-* 归一化的目的，是实现 [图像A，内参$\textbf{K}$] 至 [图像B，内参$\textbf{K}'$​]
-  的转换。即，已知图像A的内参为$\textbf{K}$，给定内参$\textbf{K}'$，生成对应的图像B。
-* 归一化的作用，是为了**假定**：可见光通道与近红外通道的图片分辨率一致。即它们矩阵的维度是一致的。
-* 内参的作用，是为了**确定**：如何从以相机为原点的坐标系如何转换到像素坐标系？
-
+  * 应当明确，*归一化*并非是某种通用说法，只在本文中使用。
+  * 归一化的目的，是实现 [图像A，内参$\textbf{K}$] 至 [图像B，内参$\textbf{K}'$​]
+    的转换。即，已知图像A的内参为$\textbf{K}$，给定内参$\textbf{K}'$，生成对应的图像B。
+  * 归一化的作用，是为了**假定**：可见光通道与近红外通道的图片分辨率一致。即它们矩阵的维度是一致的。
+  * 内参的作用，是为了**确定**：如何从以相机为原点的坐标系如何转换到像素坐标系？
 2. **其次，完成相机外参（Extrinsics）标定，计算出外参矩阵。**
 
-* 相机的位姿由旋转矩阵$\textbf{R}$和平移向量$\textbf{t}$来表示。
-* 外参矩阵的作用，是为了**确定**：如何从世界坐标系转换到以相机为原点的坐标系？
-
+  * 相机的位姿由旋转矩阵$\textbf{R}$和平移向量$\textbf{t}$来表示。
+  * 外参矩阵的作用，是为了**确定**：如何从世界坐标系转换到以相机为原点的坐标系？
 3. **再次，依据外参矩阵，求对极线（Epipolarline）。**
 
-* 依据两相机间的对极约束，求得对极线。
-* 在对极线上搜索我们需要的点，至此，便完成了由图像A的点$\textbf{P}$对应至图像B的点$\textbf{P}'$的过程。
-
+  * 依据两相机间的对极约束，求得对极线。
+  * 在对极线上搜索我们需要的点，至此，便完成了由图像A的点$\textbf{P}$对应至图像B的点$\textbf{P}'$的过程。
 4. **最后，编写规则，判定点**​$\textbf{P}'$​**是否确实满足火点的图像特征。**
+5. **内外参归一化到底做了什么？** ​
+
+  1. 现在我们有两个完全固定的相机A和B，它们距离遥远，且俩相机的镜头、传感器、俯仰角、位姿等的都不一致，但是清楚的知道它们的内外参数
+  2. 这个时候相机A拍了一张图片，得到这张图
+
+     ​![Cap1_1](assets/Cap1_1-20230727112908-fu5qdrs.jpg)​
+  3. 然后，现在想看一看，如果相机B来拍这个东西，我们得到的应该是什么图片呢？
+  4.
+  两种办法，一是把相机B拿过来以完全一致的方式安装，然后拍摄；二是内外参归一化。很明显前者在工程上难以实现，精度、光照、角度都难以保证。后者就是我们要做的事情，因此经过内外参归一化后我们得到了这张图。这就是我们在不真的使用相机B拍摄，却获得了用相机B会得到的图。
+
+  ​![Cap1_1_remap](assets/Cap1_1_remap-20230727112739-05fvojc.jpg)​
 
 # 过程
 
@@ -42,12 +50,12 @@
 
 ![Snipaste_2023-04-06_10-51-07-standard-scale-4_00x-cropped-gigapixel](assets/Snipaste_2023-04-06_10-51-07-standard-scale-4_00x-cropped-gigapixel-20230406110453-aye8ge5.jpg)
 
-* 由**相机坐标系**（$O-x-y-z$）转换为**像素坐标系**​（$o-u-v$，但原点$o'$在图像的左上角）
+* 由**相机坐标系**（$O-x-y-z$）转换为**像素坐标系**（$o-u-v$，但原点$o'$在图像的左上角）
 
-    * 其中，设**相机坐标系**中：实物点$\mathbf{P}$的坐标为$[X,Y,Z]^T$，成像点$\textbf{P}'$的坐标为$[X',Y',Z']^T$，焦距为$f$。
-    * 设**像素坐标系**中：像素坐标在$u$轴上缩放了$\alpha$倍，在$v$轴上缩放了$\beta$倍，原点平移了$[c_x,c_y]^T$。
-    * 设：使用$f_x$，$f_y$替换$\alpha f$，$\beta f$，单位为像素。
-    * 需要求取成像点$P'$在像素坐标系中的坐标。
+  * 其中，设**相机坐标系**中：实物点$\mathbf{P}$的坐标为$[X,Y,Z]^T$，成像点$\textbf{P}'$的坐标为$[X',Y',Z']^T$，焦距为$f$。
+  * 设**像素坐标系**中：像素坐标在$u$轴上缩放了$\alpha$倍，在$v$轴上缩放了$\beta$倍，原点平移了$[c_x,c_y]^T$。
+  * 设：使用$f_x$，$f_y$替换$\alpha f$，$\beta f$，单位为像素。
+  * 需要求取成像点$P'$在像素坐标系中的坐标。
 
   $$
   Z
@@ -63,62 +71,62 @@
   \mathbf{KP}
   $$
 
-    * $\mathbf{K}$为相机的内参矩阵（Intrinsics）。通常来说，相机的内参在出厂之后就是固定的了，可通过相机标定的方式人为计算出来。通常写成
+  * $\mathbf{K}$为相机的内参矩阵（Intrinsics）。通常来说，相机的内参在出厂之后就是固定的了，可通过相机标定的方式人为计算出来。通常写成
 
-      $$
-      \mathbf{K}=
-      \left[\begin{matrix}
-      f_x & 0 & c_x \\
-      0 & f_y & c_y \\
-      0 & 0 & 1 \\
-      \end{matrix}\right]=
-      \left[\begin{matrix}
-      \frac{f}{\mathrm{d}x} & 0 & c_x \\
-      0 & \frac{f}{\mathrm{d}y} & c_y \\
-      0 & 0 & 1 \\
-      \end{matrix}\right]
-      $$
+    $$
+    \mathbf{K}=
+    \left[\begin{matrix}
+    f_x & 0 & c_x \\
+    0 & f_y & c_y \\
+    0 & 0 & 1 \\
+    \end{matrix}\right]=
+    \left[\begin{matrix}
+    \frac{f}{\mathrm{d}x} & 0 & c_x \\
+    0 & \frac{f}{\mathrm{d}y} & c_y \\
+    0 & 0 & 1 \\
+    \end{matrix}\right]
+    $$
 
-      其中$f$表示焦距，单位mm，$1/\mathrm{d}x$和$1/\mathrm{d}y$分别表示图像$x$和$y$方向上每mm各占多少个像素。
+    其中$f$表示焦距，单位mm，$1/\mathrm{d}x$和$1/\mathrm{d}y$分别表示图像$x$和$y$方向上每mm各占多少个像素。
 
-      $c_x$，$c_y$表示图像坐标系中心的便宜距离，一般为图像长、宽的一半。
+    $c_x$，$c_y$表示图像坐标系中心的便宜距离，一般为图像长、宽的一半。
 * 由**世界坐标系**中的$\mathbf{P}_w$变换到**相机坐标系**中的$\mathbf{P}$
 
-    * 相机的位姿由旋转矩阵$\textbf{R}$和平移向量$\textbf{t}$来描述，有
+  * 相机的位姿由旋转矩阵$\textbf{R}$和平移向量$\textbf{t}$来描述，有
 
-      $$
-      \mathbf{P}=\mathbf{RP}_w+\mathbf{t}
-      $$
-    * 带入内参等式，有
+    $$
+    \mathbf{P}=\mathbf{RP}_w+\mathbf{t}
+    $$
+  * 带入内参等式，有
 
-      $$
-      Z\mathbf{P}_{uv}=
-      \mathbf{K}(\mathbf{RP}_w+\mathbf{t})=
-      \mathbf{KTP}_w
-      $$
-    * $Z$是物距，**外参矩阵**通常写成
+    $$
+    Z\mathbf{P}_{uv}=
+    \mathbf{K}(\mathbf{RP}_w+\mathbf{t})=
+    \mathbf{KTP}_w
+    $$
+  * $Z$是物距，**外参矩阵**通常写成
 
-      $$
-      \mathbf{T}=
-      \left[\begin{matrix}
-      \mathbf{R} & \mathbf{t} \\ 0 & 1
-      \end{matrix}\right]
-      $$
-    * 那么原式最后一个等号应当是蕴含了由非齐次坐标至齐次坐标的变换，有
+    $$
+    \mathbf{T}=
+    \left[\begin{matrix}
+    \mathbf{R} & \mathbf{t} \\ 0 & 1
+    \end{matrix}\right]
+    $$
+  * 那么原式最后一个等号应当是蕴含了由非齐次坐标至齐次坐标的变换，有
 
-      $$
-      Z\mathbf{P}_{uv}=
-      \mathbf{K}(\mathbf{RP}_w+\mathbf{t}) \Rightarrow
-      \left[\begin{matrix}
-      \mathbf{K} & 1
-      \end{matrix}\right]
-      \left[\begin{matrix}
-      \mathbf{R} & \mathbf{t} \\ 0 & 1
-      \end{matrix}\right]
-      \left[\begin{matrix}
-      \mathbf{P}_w \\ 1
-      \end{matrix}\right]
-      $$
+    $$
+    Z\mathbf{P}_{uv}=
+    \mathbf{K}(\mathbf{RP}_w+\mathbf{t}) \Rightarrow
+    \left[\begin{matrix}
+    \mathbf{K} & 1
+    \end{matrix}\right]
+    \left[\begin{matrix}
+    \mathbf{R} & \mathbf{t} \\ 0 & 1
+    \end{matrix}\right]
+    \left[\begin{matrix}
+    \mathbf{P}_w \\ 1
+    \end{matrix}\right]
+    $$
 
 ## 内外参的计算
 
@@ -158,9 +166,8 @@
 
    通过Python库exifread进行操作，可以直接读取焦距、长宽，得出$f$，$c_x$，$c_y$，难点在于如何求取$\mathrm{d}x$，$\mathrm{d}y$。
 
-* 方法一：读取相机型号，网上搜索其传感器尺寸，通过由相机自身参数求解[^1]方法求解。
-* 方法二：读取等效35mm胶片焦距信息，据此换算实际CCD尺寸，然后求解。
-
+  * 方法一：读取相机型号，网上搜索其传感器尺寸，通过由相机自身参数求解[^1]方法求解。
+  * 方法二：读取等效35mm胶片焦距信息，据此换算实际CCD尺寸，然后求解。
 3. 人为通过“棋盘格”相机标定求解
 
 ### 内参归一化
@@ -258,12 +265,12 @@
   $$
   \mathrm{idx}=
   \begin{bmatrix}
-    0. & 1. & 2. & \dots & \mathrm{height} & 0. & 1. & 2. & \dots & \mathrm{height} & \dots & \mathrm{height} \\
-    0. & 0. & 0. & \dots & 0. & 1. & 1. & 1. & \dots & 1. & \dots & \mathrm{width} \\
-    1. & 1. & 1. & \dots & 1. & 1. & 1. & 1. & \dots & 1. & \dots & 1.
-       \end{bmatrix}\\
-       \mathrm{shape}=(\mathrm{3, height}\times \mathrm{width})
-       $$
+  0. & 1. & 2. & \dots & \mathrm{height} & 0. & 1. & 2. & \dots & \mathrm{height} & \dots & \mathrm{height} \\
+  0. & 0. & 0. & \dots & 0. & 1. & 1. & 1. & \dots & 1. & \dots & \mathrm{width} \\
+  1. & 1. & 1. & \dots & 1. & 1. & 1. & 1. & \dots & 1. & \dots & 1.
+     \end{bmatrix}\\
+     \mathrm{shape}=(\mathrm{3, height}\times \mathrm{width})
+     $$
 
   因此
 
@@ -275,10 +282,10 @@
   \begin{bmatrix}
   u. & u. & u. & \dots & \mathrm{height} & 0. & 1. & 2. & \dots & \mathrm{height} & \dots & \mathrm{height} \\
   v. & v. & v. & \dots & 0. & 1. & 1. & 1. & \dots & 1. & \dots & \mathrm{width} \\
-    1. & 1. & 1. & \dots & 1. & 1. & 1. & 1. & \dots & 1. & \dots & 1.
-       \end{bmatrix}\\
-       \mathrm{shape}=(\mathrm{3, height}\times \mathrm{width})
-       $$
+  1. & 1. & 1. & \dots & 1. & 1. & 1. & 1. & \dots & 1. & \dots & 1.
+     \end{bmatrix}\\
+     \mathrm{shape}=(\mathrm{3, height}\times \mathrm{width})
+     $$
 * 所以`idx_new[:, 0]`​就是`idx[:, 0]`​对应的转换坐标，得到的新坐标是浮点型，并非直接对应像素位置，需要做一定的插值计算，细节这里不表。最终得到我们像素对的映射关系。
 * 然后利用这个像素对的映射关系赋值，由于计算得到的$u$，$v$会存在负数，需要先排除掉，然后直接赋值。
 
@@ -376,7 +383,6 @@
 
 [^1]:
 $$
-
     \mathbf{K}=
     \left[\begin{matrix}
     f_x & 0 & c_x \\
